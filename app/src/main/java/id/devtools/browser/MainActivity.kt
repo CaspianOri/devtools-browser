@@ -15,13 +15,22 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.lifecycleScope
 import id.devtools.browser.browser.BrowserViewModel
 import id.devtools.browser.browser.TabWebViewManager
+import id.devtools.browser.data.SessionSnapshot
+import id.devtools.browser.data.SessionStore
+import id.devtools.browser.data.userAgentFromName
 import id.devtools.browser.devtools.DevToolsViewModel
 import id.devtools.browser.ui.BrowserScreen
 import id.devtools.browser.ui.DevToolsBrowserTheme
 import id.devtools.browser.ui.DevToolsSheet
 import id.devtools.browser.ui.normalizeUrl
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 /**
  * Single activity. Owns the [TabWebViewManager] (WebViews must not outlive
@@ -33,6 +42,7 @@ class MainActivity : ComponentActivity() {
     private val browserViewModel: BrowserViewModel by viewModels()
     private val devToolsViewModel: DevToolsViewModel by viewModels()
     private lateinit var webViewManager: TabWebViewManager
+    private lateinit var sessionStore: SessionStore
 
     private var fileChooserCallback: ValueCallback<Array<Uri>>? by mutableStateOf(null)
 
@@ -56,37 +66,67 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         webViewManager = TabWebViewManager(this)
-        handleViewIntent(intent)
+        sessionStore = SessionStore(this)
 
-        setContent {
-            DevToolsBrowserTheme {
-                Surface(modifier = Modifier.fillMaxSize()) {
-                    var showDevTools by remember { mutableStateOf(false) }
+        // M4 session restore runs before composition so the restored tabs
+        // (active tab eager, the rest placeholders) are there from the start.
+        lifecycleScope.launch {
+            val snapshot = sessionStore.snapshot.first()
+            browserViewModel.restoreSession(snapshot)
+            devToolsViewModel.setUserAgent(userAgentFromName(snapshot.userAgentName))
+            devToolsViewModel.setDarkMode(snapshot.darkMode)
+            browserViewModel.restoreSslWhitelist(snapshot.sslWhitelist)
+            // A VIEW intent (shared link) still opens as a new active tab.
+            handleViewIntent(intent)
 
-                    BrowserScreen(
-                        browserViewModel = browserViewModel,
-                        devToolsViewModel = devToolsViewModel,
-                        webViewManager = webViewManager,
-                        onOpenDevTools = { showDevTools = true },
-                        onShowFileChooser = { callback, intent ->
-                            fileChooserCallback?.onReceiveValue(null)
-                            fileChooserCallback = callback
-                            fileChooserLauncher.launch(intent)
-                        },
-                    )
+            setContent {
+                DevToolsBrowserTheme {
+                    Surface(modifier = Modifier.fillMaxSize()) {
+                        var showDevTools by remember { mutableStateOf(false) }
 
-                    if (showDevTools) {
-                        DevToolsSheet(
+                        BrowserScreen(
                             browserViewModel = browserViewModel,
                             devToolsViewModel = devToolsViewModel,
-                            activeWebView = {
-                                browserViewModel.activeTabId.value?.let { webViewManager.get(it) }
+                            webViewManager = webViewManager,
+                            onOpenDevTools = { showDevTools = true },
+                            onShowFileChooser = { callback, intent ->
+                                fileChooserCallback?.onReceiveValue(null)
+                                fileChooserCallback = callback
+                                fileChooserLauncher.launch(intent)
                             },
-                            onDismiss = { showDevTools = false },
                         )
+
+                        if (showDevTools) {
+                            DevToolsSheet(
+                                browserViewModel = browserViewModel,
+                                devToolsViewModel = devToolsViewModel,
+                                activeWebView = {
+                                    browserViewModel.activeTabId.value?.let { webViewManager.get(it) }
+                                },
+                                onDismiss = { showDevTools = false },
+                            )
+                        }
                     }
                 }
             }
+
+            // Persist the session. distinctUntilChanged keeps progress ticks
+            // and other non-session state from triggering writes.
+            combine(
+                browserViewModel.tabs,
+                browserViewModel.activeTabId,
+                devToolsViewModel.userAgent,
+                devToolsViewModel.darkMode,
+                browserViewModel.sslWhitelistFlow,
+            ) { tabs, activeId, userAgent, darkMode, whitelist ->
+                SessionSnapshot(
+                    tabUrls = tabs.map { it.url },
+                    activeTabIndex = tabs.indexOfFirst { it.id == activeId }.coerceAtLeast(0),
+                    userAgentName = userAgent.name,
+                    darkMode = darkMode,
+                    sslWhitelist = whitelist,
+                )
+            }.distinctUntilChanged().collectLatest { sessionStore.save(it) }
         }
     }
 

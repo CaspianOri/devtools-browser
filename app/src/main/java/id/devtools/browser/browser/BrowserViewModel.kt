@@ -1,6 +1,7 @@
 package id.devtools.browser.browser
 
 import androidx.lifecycle.ViewModel
+import id.devtools.browser.data.SessionSnapshot
 import id.devtools.browser.data.Tab
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -37,6 +38,9 @@ class BrowserViewModel : ViewModel() {
 
     /** In-memory host allowlist from "always for this host" (persisted in M4). */
     private val sslWhitelist = mutableSetOf<String>()
+
+    private val _sslWhitelistFlow = MutableStateFlow<Set<String>>(emptySet())
+    val sslWhitelistFlow: StateFlow<Set<String>> = _sslWhitelistFlow.asStateFlow()
 
     /**
      * Recreate counter per tab. Bumped when a crashed WebView must be
@@ -81,6 +85,28 @@ class BrowserViewModel : ViewModel() {
         _tabs.update { list -> list.map { if (it.id == id) transform(it) else it } }
     }
 
+    /**
+     * Replaces the tab list from a persisted snapshot (M4). The WebViews are
+     * not restored — only the active tab's WebView is composed, so restored
+     * tabs are lightweight placeholders until selected.
+     */
+    fun restoreSession(snapshot: SessionSnapshot) {
+        val urls = snapshot.tabUrls.filter { it.isNotBlank() }
+        _tabs.value = if (urls.isEmpty()) {
+            listOf(Tab(url = HOME_URL))
+        } else {
+            urls.map { Tab(url = it) }
+        }
+        _activeTabId.value = _tabs.value[snapshot.activeTabIndex.coerceIn(_tabs.value.indices)].id
+    }
+
+    /** Restores the persisted SSL allowlist (M4). */
+    fun restoreSslWhitelist(hosts: Set<String>) {
+        sslWhitelist.clear()
+        sslWhitelist.addAll(hosts)
+        _sslWhitelistFlow.value = sslWhitelist.toSet()
+    }
+
     fun activeTab(): Tab? = _tabs.value.firstOrNull { it.id == _activeTabId.value }
 
     fun setPageError(tabId: String, hasError: Boolean) {
@@ -111,7 +137,10 @@ class BrowserViewModel : ViewModel() {
         when (decision) {
             SslDecision.PROCEED_ONCE -> request.handler.proceed()
             SslDecision.ALWAYS_FOR_HOST -> {
-                if (request.host.isNotBlank()) sslWhitelist.add(request.host)
+                if (request.host.isNotBlank()) {
+                    sslWhitelist.add(request.host)
+                    _sslWhitelistFlow.value = sslWhitelist.toSet()
+                }
                 request.handler.proceed()
             }
             SslDecision.CANCEL -> request.handler.cancel()

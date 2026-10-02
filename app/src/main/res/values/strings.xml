@@ -61,6 +61,7 @@
     <string name="js_hint">document.cookie</string>
     <string name="js_run">Run</string>
     <string name="js_empty">No executions yet.</string>
+    <string name="http_error">HTTP %1$d</string>
     <string name="no_active_tab">No active tab</string>
     <string name="retry">Retry</string>
     <string name="reload_tab">Reload tab</string>

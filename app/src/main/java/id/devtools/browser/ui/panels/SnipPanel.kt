@@ -68,7 +68,7 @@ fun SnipPanel(
     }
 
     Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-        Text("</> ${stringResource(R.string.js_title)}", style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(R.string.js_title), style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(8.dp))
         OutlinedTextField(
             value = code,

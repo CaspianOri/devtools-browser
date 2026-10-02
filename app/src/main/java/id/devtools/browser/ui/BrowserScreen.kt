@@ -240,8 +240,11 @@ fun BrowserScreen(
                     modifier = Modifier.fillMaxWidth().padding(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text("HTTP $httpStatus", modifier = Modifier.weight(1f),
-                        color = Color(0xFFFFB4A8))
+                    Text(
+                        stringResource(R.string.http_error, httpStatus),
+                        modifier = Modifier.weight(1f),
+                        color = Color(0xFFFFB4A8),
+                    )
                     TextButton(onClick = { reloadTab() }) { Text(stringResource(R.string.retry)) }
                 }
             }
