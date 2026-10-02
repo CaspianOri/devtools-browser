@@ -124,3 +124,97 @@ screenshot. No other runtime permissions in MVP.
 
 - WebView debugging toggle in release builds: default off, settings switch.
 - i18n beyond Indonesian: not planned.
+
+## 13. Network capture pipeline (P0)
+
+Two lanes, one ring buffer:
+
+- **Lane A (native)** — `InterceptingWebViewClient.shouldInterceptRequest`
+  (runs on a background thread): records skeleton entries
+  (`type=RESOURCE`) with method, URL, request headers, start timestamp.
+  Response status/size are NOT observable here — displayed as unknown.
+  Returns null (WebView handles the load normally).
+- **Lane B (JS)** — injected script wraps `window.fetch` and
+  `XMLHttpRequest`: captures full entries (`type=API`) with method, URL,
+  request headers/body, status, response headers/body, and timing. Posts
+  JSON to the app via `@JavascriptInterface NetworkBridge.postEntry()`
+  (callbacks arrive on a background thread).
+- **Dedup**: a Lane B entry supersedes the Lane A skeleton with the same
+  method+URL within a 5 s window; the skeleton is dropped.
+- **Threading**: single `NetworkLog` ring buffer (mutex-protected),
+  cap 500 entries, oldest dropped silently.
+- **Body policy**: capture only text-ish content types
+  (`json`, `text/*`, `xml`, `x-www-form-urlencoded`, empty); truncate bodies
+  at 256 KB with a `[truncated]` marker.
+- Display order: `startedAtMs` ascending.
+
+## 14. Error handling matrix (P0)
+
+| Failure | UX | Recovery |
+|---------|----|----------|
+| SSL error (`onReceivedSslError`) | Dialog with primary error detail | [Lanjutkan sekali] / [Selalu untuk host ini] (in-memory allowlist) / [Batal] |
+| Offline / DNS / timeout, main frame (`onReceivedError`) | Full-page error view | [Coba lagi] |
+| Sub-frame load error | Ignored (logged only) | — |
+| HTTP 4xx/5xx main frame (`onReceivedHttpError`) | Banner with status code | [Muat ulang] |
+| Render process gone (`onRenderProcessGone`) | "Tab crash" placeholder | [Muat ulang tab] recreates WebView |
+| File chooser cancelled | No-op | — |
+| JS executor throws | Error text in output panel | — |
+| Eruda asset missing / inject fail | Toast "Eruda gagal dimuat" | Toggle stays off |
+| PixelCopy screenshot fail | Toast + log | — |
+| HAR export I/O fail | Snackbar with reason | Retry button |
+| Log buffer full | Drop oldest silently | — |
+| WebView not installed / init fail | Blocking dialog | Directs to Play Store (Android System WebView) |
+
+## 15. HAR export contract (P1)
+
+HAR 1.2. `log.creator` = `{name: "DevTools Browser", version: <app>}`.
+`log.pages`: one per tab (`id`, `title`, `startedDateTime`).
+`log.entries[]` mapping:
+- `startedDateTime` ISO-8601, `time` = measured duration ms.
+- `request`: `method`, `url`, `httpVersion: ""` (unknown), `headers[]`,
+  `queryString[]` (parsed), `headersSize: -1`, `bodySize`, `postData`
+  (`{mimeType, text}` when a body was captured).
+- `response`: `status` (0 when unknown — Lane A skeletons), `statusText`,
+  `headers[]`, `content: {size, mimeType, text?}`, `redirectURL: ""`,
+  `headersSize/bodySize: -1` when unknown.
+- `timings`: total duration in `wait`; `send`/`receive` = -1.
+Single `.har` file exported to Downloads via MediaStore.
+
+## 16. Persistence decision (P1): DataStore, not Room
+
+M4 needs only: open tab URL list, active tab index, default UA choice.
+**DataStore Preferences** wins — no relations, no queries; Room would add
+KSP + compiler weight for a string list. Keys: `open_tabs` (JSON array),
+`active_tab` (int), `default_user_agent` (string). Dependency:
+`androidx.datastore:datastore-preferences`.
+
+## 17. Testing checklist (P2)
+
+- **M1**: install; open facebook.com (matches reference screenshot); add
+  3 tabs; UA Android→iPhone→Desktop verified via `https://httpbin.org/user-agent`;
+  Eruda toggle on/off; dark-mode toggle; `console.log` from JS executor
+  appears in console viewer; rotate device — WebView survives; back/forward.
+- **M2**: XHR via JS executor to httpbin.org — entry appears with bodies;
+  copy as cURL → run in Termux → identical response; heavy page —
+  buffer stays at 500, no OOM.
+- **M3**: JS executor returns `document.title`; syntax error shows error
+  text; screenshot lands in Downloads as `<timestamp>_<host>.png`;
+  exported HAR imports into a HAR viewer.
+- **M4**: force-stop app → relaunch → tabs restored; 10-minute soak,
+  logcat clean.
+- **Devices**: Infinix HOT 60 Pro (primary); API 26 emulator (min SDK).
+
+## 18. Copy-as-cURL format (P2)
+
+```
+curl -X POST 'https://example.com/api' \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer xxx' \
+  --data-binary '{"a":1}'
+```
+
+Rules: `-X` only for non-GET; URL single-quoted (`'` escaped as `'\''`);
+one `-H 'Name: value'` per captured header, excluding `Content-Length`
+(curl recalculates); body via `--data-binary` with the same quoting;
+bodies over the capture cap get a trailing `# body truncated at 256 KB`
+comment; line continuations with `\` for readability.
