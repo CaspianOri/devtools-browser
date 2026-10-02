@@ -1,6 +1,7 @@
 package id.devtools.browser.ui
 
 import android.webkit.WebView
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -14,19 +15,26 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import id.devtools.browser.R
 import id.devtools.browser.browser.BrowserViewModel
 import id.devtools.browser.devtools.DevToolsViewModel
+import id.devtools.browser.media.captureViewport
+import id.devtools.browser.media.saveBitmapToPictures
+import id.devtools.browser.media.screenshotFileName
 import id.devtools.browser.ui.panels.AppPanel
 import id.devtools.browser.ui.panels.ConsolePanel
 import id.devtools.browser.ui.panels.DevicePanel
 import id.devtools.browser.ui.panels.NetworkPanel
 import id.devtools.browser.ui.panels.PerfPanel
 import id.devtools.browser.ui.panels.SnipPanel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
  * DevTools bottom sheet with the tabs from the reference screenshot plus the
@@ -43,6 +51,8 @@ fun DevToolsSheet(
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var selectedTab by remember { mutableIntStateOf(0) }
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val titles = listOf(
         stringResource(R.string.tab_app),
         stringResource(R.string.tab_perf),
@@ -50,6 +60,37 @@ fun DevToolsSheet(
         stringResource(R.string.tab_snip),
         stringResource(R.string.tab_net),
     )
+
+    // M3 screenshot flow: dismiss the sheet first so it is not part of the
+    // capture, wait out the dismiss animation, then PixelCopy the WebView.
+    val takeScreenshot: () -> Unit = {
+        onDismiss()
+        scope.launch {
+            delay(350)
+            val webView = activeWebView()
+            if (webView == null) {
+                Toast.makeText(context, context.getString(R.string.no_active_tab), Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+            captureViewport(webView) { bitmap ->
+                if (bitmap == null) {
+                    Toast.makeText(context, context.getString(R.string.screenshot_failed), Toast.LENGTH_SHORT).show()
+                    return@captureViewport
+                }
+                val uri = saveBitmapToPictures(
+                    context,
+                    bitmap,
+                    screenshotFileName(System.currentTimeMillis()),
+                )
+                val msg = if (uri != null) {
+                    context.getString(R.string.screenshot_saved, uri.lastPathSegment ?: "?")
+                } else {
+                    context.getString(R.string.screenshot_failed)
+                }
+                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         Column(modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)) {
@@ -63,10 +104,10 @@ fun DevToolsSheet(
                 }
             }
             when (selectedTab) {
-                0 -> AppPanel(devToolsViewModel, browserViewModel, activeWebView)
+                0 -> AppPanel(devToolsViewModel, browserViewModel, activeWebView, takeScreenshot)
                 1 -> PerfPanel(devToolsViewModel, activeWebView)
                 2 -> DevicePanel()
-                3 -> SnipPanel(devToolsViewModel, activeWebView)
+                3 -> SnipPanel(devToolsViewModel, activeWebView, takeScreenshot)
                 4 -> NetworkPanel(devToolsViewModel, browserViewModel)
             }
             // Console viewer is always one swipe away in M1: shown under App.

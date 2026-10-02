@@ -39,9 +39,6 @@ import id.devtools.browser.devtools.DevToolsViewModel
 import id.devtools.browser.jsexec.JsHistoryItem
 import id.devtools.browser.jsexec.buildJsWrapper
 import id.devtools.browser.jsexec.parseJsResult
-import id.devtools.browser.media.captureViewport
-import id.devtools.browser.media.saveBitmapToPictures
-import id.devtools.browser.media.screenshotFileName
 
 /**
  * Snip tab (M3): JS executor against the active tab's page, plus viewport
@@ -51,6 +48,7 @@ import id.devtools.browser.media.screenshotFileName
 fun SnipPanel(
     devTools: DevToolsViewModel,
     activeWebView: () -> WebView?,
+    onTakeScreenshot: () -> Unit,
 ) {
     val context = LocalContext.current
     var code by remember { mutableStateOf("") }
@@ -114,38 +112,13 @@ fun SnipPanel(
         Text("📷 ${stringResource(R.string.screenshot)}", style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(8.dp))
         Button(
-            onClick = {
-                val webView = activeWebView()
-                if (webView == null) {
-                    Toast.makeText(context, context.getString(R.string.no_active_tab), Toast.LENGTH_SHORT).show()
-                    return@Button
-                }
-                captureViewport(webView) { bitmap ->
-                    if (bitmap == null) {
-                        Toast.makeText(context, context.getString(R.string.screenshot_failed), Toast.LENGTH_SHORT).show()
-                        return@captureViewport
-                    }
-                    val uri = saveBitmapToPictures(
-                        context,
-                        bitmap,
-                        screenshotFileName(System.currentTimeMillis()),
-                    )
-                    val msg = if (uri != null) {
-                        context.getString(R.string.screenshot_saved, uri.lastPathSegment ?: fileNameOf(uri))
-                    } else {
-                        context.getString(R.string.screenshot_failed)
-                    }
-                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                }
-            },
+            onClick = onTakeScreenshot,
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text("📷 ${stringResource(R.string.screenshot)}")
         }
     }
 }
-
-private fun fileNameOf(uri: android.net.Uri): String = uri.lastPathSegment ?: "?"
 
 @Composable
 private fun JsHistoryRow(item: JsHistoryItem) {

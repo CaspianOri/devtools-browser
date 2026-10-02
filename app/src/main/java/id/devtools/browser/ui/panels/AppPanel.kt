@@ -32,9 +32,6 @@ import id.devtools.browser.browser.JsSnippets
 import id.devtools.browser.browser.UserAgentProfile
 import id.devtools.browser.browser.applyDarkMode
 import id.devtools.browser.devtools.DevToolsViewModel
-import id.devtools.browser.media.captureViewport
-import id.devtools.browser.media.saveBitmapToPictures
-import id.devtools.browser.media.screenshotFileName
 import id.devtools.browser.ui.DevToolsColors
 import org.json.JSONObject
 
@@ -47,6 +44,7 @@ fun AppPanel(
     devTools: DevToolsViewModel,
     browser: BrowserViewModel,
     activeWebView: () -> WebView?,
+    onTakeScreenshot: () -> Unit,
 ) {
     val context = LocalContext.current
     val ua by devTools.userAgent.collectAsState()
@@ -159,30 +157,7 @@ fun AppPanel(
                 }
             }
             Button(
-                onClick = {
-                    val webView = activeWebView()
-                    if (webView == null) {
-                        Toast.makeText(context, context.getString(R.string.no_active_tab), Toast.LENGTH_SHORT).show()
-                        return@Button
-                    }
-                    captureViewport(webView) { bitmap ->
-                        if (bitmap == null) {
-                            Toast.makeText(context, context.getString(R.string.screenshot_failed), Toast.LENGTH_SHORT).show()
-                            return@captureViewport
-                        }
-                        val uri = saveBitmapToPictures(
-                            context,
-                            bitmap,
-                            screenshotFileName(System.currentTimeMillis()),
-                        )
-                        val msg = if (uri != null) {
-                            context.getString(R.string.screenshot_saved, uri.lastPathSegment ?: "?")
-                        } else {
-                            context.getString(R.string.screenshot_failed)
-                        }
-                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                    }
-                },
+                onClick = onTakeScreenshot,
                 modifier = Modifier.weight(1f),
                 colors = ButtonDefaults.buttonColors(containerColor = DevToolsColors.Red),
             ) {
