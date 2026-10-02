@@ -3,6 +3,7 @@ package id.devtools.browser.devtools
 import androidx.lifecycle.ViewModel
 import id.devtools.browser.browser.UserAgentProfile
 import id.devtools.browser.console.ConsoleEntry
+import id.devtools.browser.jsexec.JsHistoryStore
 import id.devtools.browser.network.NetworkCapture
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,6 +25,9 @@ class DevToolsViewModel : ViewModel() {
 
     /** M2 network capture store (native lane + JS lane, deduplicated). */
     val networkCapture = NetworkCapture()
+
+    /** M3 JS executor history (capped ring buffer). */
+    val jsHistory = JsHistoryStore()
 
     private val _userAgent = MutableStateFlow(UserAgentProfile.ANDROID)
     val userAgent: StateFlow<UserAgentProfile> = _userAgent.asStateFlow()

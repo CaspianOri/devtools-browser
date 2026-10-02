@@ -54,6 +54,13 @@
     <string name="network_url">URL</string>
     <string name="network_pending">pending</string>
     <string name="network_no_body">No body captured</string>
+    <string name="har_export">Export HAR</string>
+    <string name="har_saved">HAR saved: %1$s</string>
+    <string name="har_failed">HAR export failed</string>
+    <string name="js_title">JS Executor</string>
+    <string name="js_hint">document.cookie</string>
+    <string name="js_run">Run</string>
+    <string name="js_empty">No executions yet.</string>
     <string name="no_active_tab">No active tab</string>
     <string name="retry">Retry</string>
     <string name="reload_tab">Reload tab</string>

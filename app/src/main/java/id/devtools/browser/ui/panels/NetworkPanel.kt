@@ -39,9 +39,13 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import id.devtools.browser.BuildConfig
 import id.devtools.browser.R
 import id.devtools.browser.browser.BrowserViewModel
 import id.devtools.browser.devtools.DevToolsViewModel
+import id.devtools.browser.har.buildHar
+import id.devtools.browser.har.harFileName
+import id.devtools.browser.har.saveHarToDownloads
 import id.devtools.browser.network.CurlBuilder
 import id.devtools.browser.network.NetworkEntry
 import id.devtools.browser.network.NetworkResourceType
@@ -56,6 +60,7 @@ fun NetworkPanel(
     devTools: DevToolsViewModel,
     browser: BrowserViewModel,
 ) {
+    val context = LocalContext.current
     val entries by devTools.networkCapture.entries.collectAsState()
     val activeTabId by browser.activeTabId.collectAsState()
     var filter by remember { mutableStateOf<NetworkResourceType?>(null) }
@@ -79,8 +84,26 @@ fun NetworkPanel(
                 stringResource(R.string.network_title, visible.size),
                 style = MaterialTheme.typography.titleMedium,
             )
-            TextButton(onClick = { devTools.clearNetwork(activeTabId) }) {
-                Text(stringResource(R.string.console_clear))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                TextButton(onClick = {
+                    val har = buildHar(
+                        entries.filter { it.tabId == activeTabId },
+                        BuildConfig.VERSION_NAME,
+                    )
+                    val fileName = harFileName(System.currentTimeMillis())
+                    val uri = saveHarToDownloads(context, har, fileName)
+                    val msg = if (uri != null) {
+                        context.getString(R.string.har_saved, fileName)
+                    } else {
+                        context.getString(R.string.har_failed)
+                    }
+                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                }) {
+                    Text(stringResource(R.string.har_export))
+                }
+                TextButton(onClick = { devTools.clearNetwork(activeTabId) }) {
+                    Text(stringResource(R.string.console_clear))
+                }
             }
         }
         OutlinedTextField(

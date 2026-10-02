@@ -66,7 +66,7 @@ fun DevToolsSheet(
                 0 -> AppPanel(devToolsViewModel, browserViewModel, activeWebView)
                 1 -> PerfPanel(devToolsViewModel, activeWebView)
                 2 -> DevicePanel()
-                3 -> SnipPanel()
+                3 -> SnipPanel(devToolsViewModel, activeWebView)
                 4 -> NetworkPanel(devToolsViewModel, browserViewModel)
             }
             // Console viewer is always one swipe away in M1: shown under App.
