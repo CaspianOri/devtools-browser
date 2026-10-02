@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.webkit.ValueCallback
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -12,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
@@ -22,10 +22,14 @@ import id.devtools.browser.data.SessionSnapshot
 import id.devtools.browser.data.SessionStore
 import id.devtools.browser.data.userAgentFromName
 import id.devtools.browser.devtools.DevToolsViewModel
+import id.devtools.browser.media.captureViewport
+import id.devtools.browser.media.saveBitmapToPictures
+import id.devtools.browser.media.screenshotFileName
 import id.devtools.browser.ui.BrowserScreen
 import id.devtools.browser.ui.DevToolsBrowserTheme
 import id.devtools.browser.ui.DevToolsSheet
 import id.devtools.browser.ui.normalizeUrl
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -44,6 +48,9 @@ class MainActivity : ComponentActivity() {
     private val devToolsViewModel: DevToolsViewModel by viewModels()
     private lateinit var webViewManager: TabWebViewManager
     private lateinit var sessionStore: SessionStore
+
+    /** Hoisted so takeScreenshot() can dismiss the sheet from activity scope. */
+    private var showDevTools by mutableStateOf(false)
 
     private var fileChooserCallback: ValueCallback<Array<Uri>>? by mutableStateOf(null)
 
@@ -89,8 +96,6 @@ class MainActivity : ComponentActivity() {
             setContent {
                 DevToolsBrowserTheme {
                     Surface(modifier = Modifier.fillMaxSize()) {
-                        var showDevTools by remember { mutableStateOf(false) }
-
                         BrowserScreen(
                             browserViewModel = browserViewModel,
                             devToolsViewModel = devToolsViewModel,
@@ -111,6 +116,7 @@ class MainActivity : ComponentActivity() {
                                     browserViewModel.activeTabId.value?.let { webViewManager.get(it) }
                                 },
                                 onDismiss = { showDevTools = false },
+                                onTakeScreenshot = ::takeScreenshot,
                             )
                         }
                     }
@@ -134,6 +140,45 @@ class MainActivity : ComponentActivity() {
                     sslWhitelist = whitelist,
                 )
             }.distinctUntilChanged().collectLatest { sessionStore.save(it) }
+        }
+    }
+
+    /**
+     * M3 screenshot flow. Dismisses the DevTools sheet first so it is not part
+     * of the capture, waits out the dismiss animation, then PixelCopies the
+     * active tab's WebView into Pictures/DevToolsBrowser.
+     *
+     * Runs in [lifecycleScope] (activity-scoped) on purpose: the previous
+     * implementation launched the delayed capture in the sheet's composition
+     * scope, which is cancelled on dismiss — killing the capture before it ran
+     * and leaving the user with no toast and no file.
+     */
+    private fun takeScreenshot() {
+        showDevTools = false
+        lifecycleScope.launch {
+            delay(350)
+            val webView = browserViewModel.activeTabId.value?.let { webViewManager.get(it) }
+            if (webView == null) {
+                Toast.makeText(this@MainActivity, getString(R.string.no_active_tab), Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+            captureViewport(webView) { bitmap ->
+                if (bitmap == null) {
+                    Toast.makeText(this@MainActivity, getString(R.string.screenshot_failed), Toast.LENGTH_SHORT).show()
+                    return@captureViewport
+                }
+                val uri = saveBitmapToPictures(
+                    this@MainActivity,
+                    bitmap,
+                    screenshotFileName(System.currentTimeMillis()),
+                )
+                val msg = if (uri != null) {
+                    getString(R.string.screenshot_saved, uri.lastPathSegment ?: "?")
+                } else {
+                    getString(R.string.screenshot_failed)
+                }
+                Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
+            }
         }
     }
 

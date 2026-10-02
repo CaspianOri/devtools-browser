@@ -110,8 +110,15 @@ fun AppPanel(
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
             Button(
                 onClick = {
-                    activeWebView()?.evaluateJavascript(JsSnippets.VIEWPORT_INFO) { raw ->
-                        devTools.setViewportInfo(prettyViewport(raw))
+                    val webView = activeWebView()
+                    if (webView == null) {
+                        // Was a silent no-op: surface it so a missing WebView
+                        // can never look like a broken button.
+                        Toast.makeText(context, context.getString(R.string.no_active_tab), Toast.LENGTH_SHORT).show()
+                    } else {
+                        webView.evaluateJavascript(JsSnippets.VIEWPORT_INFO) { raw ->
+                            devTools.setViewportInfo(prettyViewport(raw))
+                        }
                     }
                 },
                 modifier = Modifier.weight(1f),
