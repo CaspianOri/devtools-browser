@@ -14,6 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import id.devtools.browser.data.Tab
 import id.devtools.browser.devtools.DevToolsViewModel
+import id.devtools.browser.network.NetworkJsBridge
 
 /**
  * Hosts the tab's WebView inside Compose. The WebView instance is owned by
@@ -44,6 +45,13 @@ fun TabWebView(
     DisposableEffect(tab.id, nonce) {
         webView.webViewClient = buildWebViewClient(tab.id, browserViewModel, devToolsViewModel, webViewManager)
         webView.webChromeClient = buildWebChromeClient(tab.id, browserViewModel, devToolsViewModel, webViewManager, onShowFileChooser)
+        // M2 lane B: JS bridge for the injected fetch/XHR wrapper. The remove
+        // first keeps re-attachment idempotent across recompositions.
+        webView.removeJavascriptInterface(NetworkJsBridge.INTERFACE_NAME)
+        webView.addJavascriptInterface(
+            NetworkJsBridge(tab.id, devToolsViewModel.networkCapture),
+            NetworkJsBridge.INTERFACE_NAME,
+        )
         if (webView.url == null && tab.url.isNotBlank()) {
             webView.loadUrl(tab.url)
         }

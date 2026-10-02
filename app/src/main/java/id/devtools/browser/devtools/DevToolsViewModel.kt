@@ -3,6 +3,7 @@ package id.devtools.browser.devtools
 import androidx.lifecycle.ViewModel
 import id.devtools.browser.browser.UserAgentProfile
 import id.devtools.browser.console.ConsoleEntry
+import id.devtools.browser.network.NetworkCapture
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -10,8 +11,9 @@ import kotlinx.coroutines.flow.update
 import java.util.concurrent.atomic.AtomicLong
 
 /**
- * State for the DevTools bottom sheet: console log ring buffer, UA profile,
- * dark mode, Eruda toggle, viewport info and measured load time.
+ * State for the DevTools bottom sheet: console log ring buffer, network
+ * capture buffer, UA profile, dark mode, Eruda toggle, viewport info and
+ * measured load time.
  */
 class DevToolsViewModel : ViewModel() {
 
@@ -19,6 +21,9 @@ class DevToolsViewModel : ViewModel() {
 
     private val _consoleEntries = MutableStateFlow<List<ConsoleEntry>>(emptyList())
     val consoleEntries: StateFlow<List<ConsoleEntry>> = _consoleEntries.asStateFlow()
+
+    /** M2 network capture store (native lane + JS lane, deduplicated). */
+    val networkCapture = NetworkCapture()
 
     private val _userAgent = MutableStateFlow(UserAgentProfile.ANDROID)
     val userAgent: StateFlow<UserAgentProfile> = _userAgent.asStateFlow()
@@ -44,6 +49,10 @@ class DevToolsViewModel : ViewModel() {
         _consoleEntries.update { list ->
             if (tabId == null) emptyList() else list.filterNot { it.tabId == tabId }
         }
+    }
+
+    fun clearNetwork(tabId: String? = null) {
+        networkCapture.clear(tabId)
     }
 
     fun setUserAgent(profile: UserAgentProfile) {

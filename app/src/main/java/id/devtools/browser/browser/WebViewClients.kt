@@ -20,6 +20,7 @@ import androidx.webkit.WebViewFeature
 import id.devtools.browser.console.ConsoleEntry
 import id.devtools.browser.console.ConsoleLevel
 import id.devtools.browser.devtools.DevToolsViewModel
+import id.devtools.browser.network.NetworkJsBridge
 import java.io.IOException
 
 /** Small JS snippets evaluated against the page. Kept inline; Eruda lives in assets. */
@@ -95,6 +96,9 @@ fun buildWebViewClient(
 
     override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) {
         viewModel.updateTab(tabId) { it.copy(isLoading = true, progress = 0) }
+        // Lane B of network capture: wrap fetch/XHR as early as possible so
+        // API calls made by page scripts are observed.
+        view.evaluateJavascript(NetworkJsBridge.NETWORK_HOOK_JS, null)
     }
 
     override fun onPageFinished(view: WebView, url: String?) {
@@ -112,6 +116,30 @@ fun buildWebViewClient(
         if (devTools.darkMode.value) {
             applyDarkMode(view, true)
         }
+        // Re-arm lane B: a full navigation resets the page JS context, and
+        // SPA route changes may load scripts that ran before the first wrap.
+        view.evaluateJavascript(NetworkJsBridge.NETWORK_HOOK_JS, null)
+    }
+
+    /**
+     * Lane A of network capture (M2): records the request skeleton (URL,
+     * method, headers) for every resource load. Returns null so the WebView
+     * performs the request itself — this lane NEVER refetches, because
+     * replaying requests could duplicate state-changing actions on the target.
+     */
+    override fun shouldInterceptRequest(
+        view: WebView,
+        request: WebResourceRequest,
+    ): WebResourceResponse? {
+        val url = request.url?.toString() ?: return null
+        devTools.networkCapture.recordNative(
+            tabId = tabId,
+            url = url,
+            method = request.method ?: "GET",
+            requestHeaders = request.requestHeaders.orEmpty(),
+            isMainFrame = request.isForMainFrame,
+        )
+        return null
     }
 
     // NOTE: onReceivedIcon belongs to WebChromeClient; favicon display is backlog.

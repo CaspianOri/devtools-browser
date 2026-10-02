@@ -16,6 +16,7 @@
     <string name="tab_perf">Perf</string>
     <string name="tab_device">Device</string>
     <string name="tab_snip">Snip</string>
+    <string name="tab_net">Net</string>
 
     <string name="user_agent_viewport">USER-AGENT &amp; VIEWPORT</string>
     <string name="ua_android">Android</string>
@@ -38,6 +39,21 @@
     <string name="console_clear">Bersihkan</string>
     <string name="console_empty">Belum ada log console.</string>
     <string name="network_empty">Belum ada request tercatat.\nBuka halaman untuk mulai merekam.</string>
+    <string name="network_title">Network (%1$d)</string>
+    <string name="network_search_hint">Filter URL…</string>
+    <string name="network_filter_all">Semua</string>
+    <string name="network_copy_curl">Salin sebagai cURL</string>
+    <string name="network_request">Request</string>
+    <string name="network_response">Response</string>
+    <string name="network_detail_title">Detail request</string>
+    <string name="network_method">Method</string>
+    <string name="network_status">Status</string>
+    <string name="network_type">Tipe</string>
+    <string name="network_duration">Durasi</string>
+    <string name="network_duration_ms">%1$d ms</string>
+    <string name="network_url">URL</string>
+    <string name="network_pending">menunggu</string>
+    <string name="network_no_body">Tidak ada body terekam</string>
     <string name="no_active_tab">Tidak ada tab aktif</string>
     <string name="retry">Coba lagi</string>
     <string name="reload_tab">Muat ulang tab</string>

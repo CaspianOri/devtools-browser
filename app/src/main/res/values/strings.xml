@@ -16,6 +16,7 @@
     <string name="tab_perf">Perf</string>
     <string name="tab_device">Device</string>
     <string name="tab_snip">Snip</string>
+    <string name="tab_net">Net</string>
 
     <string name="user_agent_viewport">USER-AGENT &amp; VIEWPORT</string>
     <string name="ua_android">Android</string>
@@ -38,6 +39,21 @@
     <string name="console_clear">Clear</string>
     <string name="console_empty">No console logs yet.</string>
     <string name="network_empty">No requests recorded yet.\nOpen a page to start capturing.</string>
+    <string name="network_title">Network (%1$d)</string>
+    <string name="network_search_hint">Filter URL…</string>
+    <string name="network_filter_all">All</string>
+    <string name="network_copy_curl">Copy as cURL</string>
+    <string name="network_request">Request</string>
+    <string name="network_response">Response</string>
+    <string name="network_detail_title">Request detail</string>
+    <string name="network_method">Method</string>
+    <string name="network_status">Status</string>
+    <string name="network_type">Type</string>
+    <string name="network_duration">Duration</string>
+    <string name="network_duration_ms">%1$d ms</string>
+    <string name="network_url">URL</string>
+    <string name="network_pending">pending</string>
+    <string name="network_no_body">No body captured</string>
     <string name="no_active_tab">No active tab</string>
     <string name="retry">Retry</string>
     <string name="reload_tab">Reload tab</string>
