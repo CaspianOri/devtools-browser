@@ -6,10 +6,11 @@ Project dir: `~/workspace/devtools-browser/`
 
 ## 1. Goal
 
-A production-grade Android dev-tools browser for bug bounty work on mobile:
-browse targets, inspect traffic, run JS payloads, and capture evidence —
-all from the phone. Replicates the "Kiro Browser Dev" UI from the reference
-screenshot, plus console log viewer, network inspector, and JS executor.
+An Android dev-tools browser inspired by bug bounty workflows: browse
+targets, inspect traffic, run JS payloads, and capture evidence — all from
+the phone. Built to be practical for hunters who don't have a laptop or PC:
+console log viewer, network inspector, and JS executor in one app, no
+desktop required.
 
 ## 2. Non-goals (backlog)
 
@@ -28,7 +29,7 @@ bypass info, QR scan. Full-page screenshot (needs CDP) stays backlog.
 
 ## 4. Features
 
-### 4.1 Browser core (screenshot replica)
+### 4.1 Browser core
 - Multi-tab WebView; tab strip with per-tab title; `+` adds tab; CLOSE per tab.
 - URL bar with GO; back / forward / reload; horizontal scroll for 20+ tabs.
 - "Buka aplikasi" button: fires `ACTION_VIEW` intent for the current URL.
