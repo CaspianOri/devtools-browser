@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">DevTools Browser</string>
+    <string name="url_hint">Ketik URL atau kata kunci…</string>
+    <string name="go">GO</string>
+    <string name="open_in_app">Buka aplikasi</string>
+    <string name="close">Tutup</string>
+    <string name="new_tab">Tab baru</string>
+
+    <string name="devtools">DevTools</string>
+    <string name="tab_app">App</string>
+    <string name="tab_perf">Perf</string>
+    <string name="tab_device">Device</string>
+    <string name="tab_snip">Snip</string>
+
+    <string name="user_agent_viewport">USER-AGENT &amp; VIEWPORT</string>
+    <string name="ua_android">Android</string>
+    <string name="ua_iphone">iPhone</string>
+    <string name="ua_desktop">Desktop</string>
+    <string name="toggle_eruda">Toggle Eruda</string>
+    <string name="viewport">Viewport</string>
+    <string name="load_time">LoadTime</string>
+    <string name="dark_mode">Dark Mode</string>
+    <string name="screenshot">Screenshot</string>
+    <string name="device_info_pending">Device info akan muncul…</string>
+    <string name="remote_debug_hint">Remote Debug: chrome://inspect via USB (WebView debugging ON)</string>
+
+    <string name="console_empty">Belum ada log console.</string>
+    <string name="network_empty">Belum ada request tercatat.\nBuka halaman untuk mulai merekam.</string>
+    <string name="retry">Coba lagi</string>
+    <string name="reload_tab">Muat ulang tab</string>
+    <string name="tab_crashed">Proses tab crash.</string>
+    <string name="page_load_error">Halaman gagal dimuat.</string>
+
+    <string name="ssl_title">Peringatan Sertifikat SSL</string>
+    <string name="ssl_message">Sertifikat situs ini bermasalah: %1$s\n\nLanjutkan hanya jika Anda yakin situs ini aman (mis. lab sendiri).</string>
+    <string name="ssl_proceed_once">Lanjutkan sekali</string>
+    <string name="ssl_always_host">Selalu untuk host ini</string>
+    <string name="ssl_cancel">Batal</string>
+
+    <string name="eruda_failed">Eruda gagal dimuat</string>
+    <string name="screenshot_saved">Screenshot tersimpan: %1$s</string>
+    <string name="screenshot_failed">Screenshot gagal</string>
+    <string name="copied">Disalin ke clipboard</string>
+    <string name="no_app_handler">Tidak ada aplikasi yang bisa membuka URL ini</string>
+    <string name="js_coming_soon">JS Executor hadir di M3</string>
+    <string name="har_coming_soon">Export HAR hadir di M3</string>
+</resources>

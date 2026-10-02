@@ -104,12 +104,25 @@ screenshot. No other runtime permissions in MVP.
 
 - Unit tests (JUnit + Robolectric where Android classes are involved):
   `CurlExporter`, HAR builder, log-cap logic, ViewModels.
-- WebView flows cannot be unit-tested without instrumented tests; covered by
-  a manual checklist instead (M4): facebook.com, x.com, instagram.com —
-  every button from the screenshot plus new tools, on the user's Infinix
-  (API level per device) and an API 26 emulator.
-- Definition of done per milestone: builds clean, checklist passes, no
-  crashes in logcat during a 10-minute session.
+- **WebView flows — automated** via Espresso-Web (`androidx.test.espresso.web`):
+  instrumented tests that load real pages, find/click/type web elements, and
+  assert on content. Runs on emulator or a real device via adb.
+- **E2E — automated** as orchestrated instrumented scenarios (Android Test
+  Orchestrator): launch → open URL → open DevTools → toggle Eruda →
+  capture console entry → assert. Same device requirement as above.
+- **Compose UI regression — automated on JVM** via Paparazzi screenshot
+  tests (no device needed): BrowserScreen, DevToolsSheet panels.
+- Manual checklist remains only for what automation cannot cover: real
+  device quirks (rotate physics, OEM WebView versions), `chrome://inspect`
+  from a desktop, and store listing screenshots.
+- Honest constraint: this VM cannot run an Android emulator (no KVM, 2
+  CPUs). Instrumented tests are written CI/device-ready; execution happens
+  on the user's phone via adb or on his PC emulator. Paparazzi + unit tests
+  run on the VM.
+- Definition of done per milestone: builds clean, `./gradlew test`
+  green, Paparazzi snapshots approved, instrumented suite written
+  (executed on device before release), no crashes in logcat during a
+  10-minute session.
 
 ## 11. Milestones
 
@@ -136,9 +149,14 @@ Two lanes, one ring buffer:
   Returns null (WebView handles the load normally).
 - **Lane B (JS)** — injected script wraps `window.fetch` and
   `XMLHttpRequest`: captures full entries (`type=API`) with method, URL,
-  request headers/body, status, response headers/body, and timing. Posts
-  JSON to the app via `@JavascriptInterface NetworkBridge.postEntry()`
-  (callbacks arrive on a background thread).
+  request headers/body, status, response headers/body, and timing. Emits
+  start/end events to the app via `@JavascriptInterface`
+  (`onFetchStart/onFetchEnd`, `onXhrStart/onXhrEnd`); bodies are truncated
+  to 256 KB before crossing the bridge. Callbacks arrive on a background
+  thread.
+- **No refetch**: Lane A never re-executes requests. Double-fetching would
+  duplicate POSTs against bounty targets and corrupt state; API bodies are
+  covered by Lane B.
 - **Dedup**: a Lane B entry supersedes the Lane A skeleton with the same
   method+URL within a 5 s window; the skeleton is dropped.
 - **Threading**: single `NetworkLog` ring buffer (mutex-protected),
