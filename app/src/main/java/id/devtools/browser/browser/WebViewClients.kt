@@ -114,9 +114,7 @@ fun buildWebViewClient(
         }
     }
 
-    override fun onReceivedIcon(view: WebView, icon: Bitmap?) {
-        // Favicon shown in tab strip; title update is enough for M1.
-    }
+    // NOTE: onReceivedIcon belongs to WebChromeClient; favicon display is backlog.
 
     override fun onReceivedError(
         view: WebView,
@@ -183,6 +181,7 @@ fun buildWebChromeClient(
     tabId: String,
     viewModel: BrowserViewModel,
     devTools: DevToolsViewModel,
+    webViewManager: TabWebViewManager,
     onShowFileChooser: (ValueCallback<Array<Uri>>, Intent) -> Unit,
 ): WebChromeClient = object : WebChromeClient() {
 

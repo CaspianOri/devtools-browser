@@ -67,10 +67,11 @@ fun normalizeUrl(input: String): String? {
     val trimmed = input.trim()
     if (trimmed.isEmpty()) return null
     if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed
-    if (trimmed.contains(" ") || !trimmed.contains(".")) {
-        // Treat as a search query.
+    if (!trimmed.contains(".")) {
+        // Plain words become a search query.
         return "https://www.google.com/search?q=${Uri.encode(trimmed)}"
     }
+    // Domain-like input (even with spaces in the path) is treated as a URL.
     return "https://$trimmed"
 }
 

@@ -43,7 +43,7 @@ fun TabWebView(
     // Attach clients once per (tab, nonce) lifetime.
     DisposableEffect(tab.id, nonce) {
         webView.webViewClient = buildWebViewClient(tab.id, browserViewModel, devToolsViewModel, webViewManager)
-        webView.webChromeClient = buildWebChromeClient(tab.id, browserViewModel, devToolsViewModel, onShowFileChooser)
+        webView.webChromeClient = buildWebChromeClient(tab.id, browserViewModel, devToolsViewModel, webViewManager, onShowFileChooser)
         if (webView.url == null && tab.url.isNotBlank()) {
             webView.loadUrl(tab.url)
         }

@@ -17,6 +17,8 @@ android {
         versionCode = 1
         versionName = "0.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        // Default false; the debug build type overrides this to true.
+        buildConfigField("boolean", "WEBVIEW_DEBUG", "false")
     }
 
     buildTypes {

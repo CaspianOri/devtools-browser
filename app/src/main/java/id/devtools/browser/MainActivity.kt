@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import id.devtools.browser.browser.BrowserViewModel
@@ -60,7 +61,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             DevToolsBrowserTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    var showDevTools by mutableStateOf(false)
+                    var showDevTools by remember { mutableStateOf(false) }
 
                     BrowserScreen(
                         browserViewModel = browserViewModel,

@@ -13,13 +13,15 @@ import id.devtools.browser.BuildConfig
  */
 class TabWebViewManager(context: Context) {
 
-    private val appContext = context.applicationContext
+    // Activity-scoped context per design spec (themed WebViews, dialogs);
+    // all WebViews are destroyed in MainActivity.onDestroy.
+    private val activityContext = context
     private val webViews = mutableMapOf<String, WebView>()
 
     @SuppressLint("SetJavaScriptEnabled")
     fun getOrCreate(tabId: String, userAgent: String): WebView =
         webViews.getOrPut(tabId) {
-            WebView(appContext).apply {
+            WebView(activityContext).apply {
                 settings.apply {
                     javaScriptEnabled = true
                     domStorageEnabled = true
