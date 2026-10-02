@@ -45,6 +45,9 @@ android {
     }
     testOptions {
         execution = "ANDROIDX_TEST_ORCHESTRATOR"
+        unitTests {
+            isIncludeAndroidResources = true
+        }
     }
     packaging {
         resources {

@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Default (fallback) locale: English -->
 <resources>
     <string name="app_name">DevTools Browser</string>
-    <string name="url_hint">Ketik URL atau kata kunci…</string>
+    <string name="url_hint">Type a URL or keywords…</string>
     <string name="go">GO</string>
-    <string name="open_in_app">Buka aplikasi</string>
-    <string name="close">Tutup</string>
-    <string name="new_tab">Tab baru</string>
+    <string name="open_in_app">Open in app</string>
+    <string name="close">Close</string>
+    <string name="new_tab">New tab</string>
+    <string name="nav_back">Back</string>
+    <string name="nav_forward">Forward</string>
+    <string name="nav_reload">Reload</string>
 
     <string name="devtools">DevTools</string>
     <string name="tab_app">App</string>
@@ -22,27 +26,36 @@
     <string name="load_time">LoadTime</string>
     <string name="dark_mode">Dark Mode</string>
     <string name="screenshot">Screenshot</string>
-    <string name="device_info_pending">Device info akan muncul…</string>
+    <string name="device_info_title">DEVICE INFO</string>
+    <string name="device_info_pending">Device info will appear…</string>
+    <string name="device_model">Model</string>
+    <string name="device_android">Android</string>
+    <string name="device_webview">WebView</string>
+    <string name="device_screen">Screen</string>
     <string name="remote_debug_hint">Remote Debug: chrome://inspect via USB (WebView debugging ON)</string>
 
-    <string name="console_empty">Belum ada log console.</string>
-    <string name="network_empty">Belum ada request tercatat.\nBuka halaman untuk mulai merekam.</string>
-    <string name="retry">Coba lagi</string>
-    <string name="reload_tab">Muat ulang tab</string>
-    <string name="tab_crashed">Proses tab crash.</string>
-    <string name="page_load_error">Halaman gagal dimuat.</string>
+    <string name="console_title">Console (%1$d)</string>
+    <string name="console_clear">Clear</string>
+    <string name="console_empty">No console logs yet.</string>
+    <string name="network_empty">No requests recorded yet.\nOpen a page to start capturing.</string>
+    <string name="no_active_tab">No active tab</string>
+    <string name="retry">Retry</string>
+    <string name="reload_tab">Reload tab</string>
+    <string name="tab_crashed">Tab process crashed.</string>
+    <string name="page_load_error">Page failed to load.</string>
 
-    <string name="ssl_title">Peringatan Sertifikat SSL</string>
-    <string name="ssl_message">Sertifikat situs ini bermasalah: %1$s\n\nLanjutkan hanya jika Anda yakin situs ini aman (mis. lab sendiri).</string>
-    <string name="ssl_proceed_once">Lanjutkan sekali</string>
-    <string name="ssl_always_host">Selalu untuk host ini</string>
-    <string name="ssl_cancel">Batal</string>
+    <string name="ssl_title">SSL Certificate Warning</string>
+    <string name="ssl_message">This site\'s certificate has issues: %1$s\n\nContinue only if you trust this site (e.g. your own lab).</string>
+    <string name="ssl_proceed_once">Proceed once</string>
+    <string name="ssl_always_host">Always for this host</string>
+    <string name="ssl_cancel">Cancel</string>
 
-    <string name="eruda_failed">Eruda gagal dimuat</string>
-    <string name="screenshot_saved">Screenshot tersimpan: %1$s</string>
-    <string name="screenshot_failed">Screenshot gagal</string>
-    <string name="copied">Disalin ke clipboard</string>
-    <string name="no_app_handler">Tidak ada aplikasi yang bisa membuka URL ini</string>
-    <string name="js_coming_soon">JS Executor hadir di M3</string>
-    <string name="har_coming_soon">Export HAR hadir di M3</string>
+    <string name="eruda_failed">Failed to load Eruda</string>
+    <string name="screenshot_saved">Screenshot saved: %1$s</string>
+    <string name="screenshot_failed">Screenshot failed</string>
+    <string name="copied">Copied to clipboard</string>
+    <string name="no_app_handler">No app can open this URL</string>
+    <string name="js_coming_soon">JS Executor coming in M3</string>
+    <string name="har_coming_soon">HAR export coming in M3</string>
+    <string name="screenshot_coming_soon">Screenshot coming in M3</string>
 </resources>

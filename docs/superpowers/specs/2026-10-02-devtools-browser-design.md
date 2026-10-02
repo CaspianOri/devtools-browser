@@ -18,7 +18,12 @@ bypass info, QR scan. Full-page screenshot (needs CDP) stays backlog.
 
 ## 3. Language policy
 
-- UI strings: Indonesian.
+- UI strings: **English default** (`res/values/strings.xml`, the Android
+  fallback) + **Indonesian** (`res/values-in/strings.xml`). The device locale
+  picks automatically; adding a new language is a new `values-<code>`
+  folder — no code changes.
+- Zero hardcoded UI strings in code; every user-visible literal lives in
+  `strings.xml` (verified by review; M4 adds a lint check).
 - Code: English only — identifiers, comments, KDoc, commit messages, log tags.
 
 ## 4. Features
@@ -135,8 +140,11 @@ screenshot. No other runtime permissions in MVP.
 
 ## 12. Open items (none blocking M1)
 
-- WebView debugging toggle in release builds: default off, settings switch.
-- i18n beyond Indonesian: not planned.
+- WebView debugging toggle in release builds: default off, settings toggle.
+- Per-app language picker (Android 13+ `setApplicationLocales`): backlog —
+  system locale is used until then.
+- RTL layout mirroring: Compose handles it automatically; verify with an
+  RTL locale (e.g. Arabic) before global release.
 
 ## 13. Network capture pipeline (P0)
 
