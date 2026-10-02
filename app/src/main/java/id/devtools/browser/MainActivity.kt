@@ -31,6 +31,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 
 /**
  * Single activity. Owns the [TabWebViewManager] (WebViews must not outlive
@@ -70,8 +71,14 @@ class MainActivity : ComponentActivity() {
 
         // M4 session restore runs before composition so the restored tabs
         // (active tab eager, the rest placeholders) are there from the start.
+        // The read is bounded: a stuck store degrades to a fresh session
+        // instead of black-screening startup.
         lifecycleScope.launch {
-            val snapshot = sessionStore.snapshot.first()
+            val snapshot = try {
+                withTimeout(3000) { sessionStore.snapshot.first() }
+            } catch (e: Exception) {
+                SessionSnapshot()
+            }
             browserViewModel.restoreSession(snapshot)
             devToolsViewModel.setUserAgent(userAgentFromName(snapshot.userAgentName))
             devToolsViewModel.setDarkMode(snapshot.darkMode)
