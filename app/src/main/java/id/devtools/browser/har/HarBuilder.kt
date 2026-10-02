@@ -82,7 +82,12 @@ private data class HarLog(
 @Serializable
 private data class HarRoot(val log: HarLog)
 
-private val harJson = Json { explicitNulls = false }
+// explicitNulls=false drops absent bodies; encodeDefaults=true keeps HAR
+// contract fields (version "1.2", timings -1) which are Kotlin defaults.
+private val harJson = Json {
+    explicitNulls = false
+    encodeDefaults = true
+}
 
 /** Serializes captured entries to a HAR 1.2 document. */
 fun buildHar(entries: List<NetworkEntry>, creatorVersion: String): String =
