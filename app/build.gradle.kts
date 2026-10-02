@@ -15,7 +15,7 @@ android {
         minSdk = 26
         targetSdk = 34
         versionCode = 1
-        versionName = "0.2.0"
+        versionName = "0.3.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // Default false; the debug build type overrides this to true.
         buildConfigField("boolean", "WEBVIEW_DEBUG", "false")
